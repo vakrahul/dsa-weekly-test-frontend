@@ -7,15 +7,17 @@ const AdminPanel = () => {
   const { user } = useContext(AuthContext);
 
   // State for the "Add Question" form
-  const [questionText, setQuestionText] = useState('');
-  const [options, setOptions] = useState(['', '', '', '']);
-  const [correctAnswer, setCorrectAnswer] = useState('');
+  const [title, setTitle] = useState('');
+  const [problemStatement, setProblemStatement] = useState('');
+  const [starterCode, setStarterCode] = useState('');
+  const [testCases, setTestCases] = useState([{ input: '', expectedOutput: '' }]);
 
   // State for the "Create Test" form
   const [allQuestions, setAllQuestions] = useState([]);
   const [selectedQuestions, setSelectedQuestions] = useState([]);
   const [testTitle, setTestTitle] = useState('');
 
+  // State for showing success or error messages
   const [message, setMessage] = useState('');
 
   // Fetch all questions when the component loads
@@ -35,26 +37,40 @@ const AdminPanel = () => {
     fetchQuestions();
   }, [user]);
 
-  const handleOptionChange = (index, value) => {
-    const newOptions = [...options];
-    newOptions[index] = value;
-    setOptions(newOptions);
+  // Handler for test case input changes
+  const handleTestCaseChange = (index, field, value) => {
+    const newTestCases = [...testCases];
+    newTestCases[index][field] = value;
+    setTestCases(newTestCases);
   };
 
+  // Adds a new blank test case to the form
+  const addTestCase = () => {
+    setTestCases([...testCases, { input: '', expectedOutput: '' }]);
+  };
+
+  // Removes a test case from the form by its index
+  const removeTestCase = (index) => {
+    const newTestCases = testCases.filter((_, i) => i !== index);
+    setTestCases(newTestCases);
+  };
+
+  // Handles the submission of the "Add Question" form
   const handleAddQuestion = async (e) => {
     e.preventDefault();
     setMessage('');
     try {
       await api.post('/admin/questions',
-        { questionText, options, correctAnswer },
+        { title, problemStatement, starterCode, testCases },
         { headers: { Authorization: `Bearer ${user.token}` } }
       );
       setMessage('Question added successfully!');
-      // Reset form
-      setQuestionText('');
-      setOptions(['', '', '', '']);
-      setCorrectAnswer('');
-      // Refresh question list
+      // Reset form fields
+      setTitle('');
+      setProblemStatement('');
+      setStarterCode('');
+      setTestCases([{ input: '', expectedOutput: '' }]);
+      // Refresh the list of all questions
       const res = await api.get('/admin/questions', { headers: { Authorization: `Bearer ${user.token}` }});
       setAllQuestions(res.data);
     } catch (error) {
@@ -63,6 +79,7 @@ const AdminPanel = () => {
     }
   };
 
+  // Toggles the selection of a question for a new test
   const handleQuestionSelect = (questionId) => {
     setSelectedQuestions(prev =>
       prev.includes(questionId)
@@ -71,6 +88,7 @@ const AdminPanel = () => {
     );
   };
   
+  // Handles the submission of the "Create Test" form
   const handleCreateTest = async (e) => {
     e.preventDefault();
     setMessage('');
@@ -84,7 +102,7 @@ const AdminPanel = () => {
         { headers: { Authorization: `Bearer ${user.token}` } }
       );
       setMessage('Test created successfully!');
-      // Reset form
+      // Reset form fields
       setTestTitle('');
       setSelectedQuestions([]);
     } catch (error) {
@@ -98,36 +116,26 @@ const AdminPanel = () => {
       <h1>Admin Panel</h1>
       {message && <p className="message">{message}</p>}
       <div className="admin-forms-container">
-        {/* Add Question Form */}
+        {/* Form for Adding a New Question */}
         <form onSubmit={handleAddQuestion} className="admin-form">
-          <h2>Add New Question</h2>
-          <textarea
-            value={questionText}
-            onChange={(e) => setQuestionText(e.target.value)}
-            placeholder="Question Text"
-            required
-          />
-          {options.map((opt, index) => (
-            <input
-              key={index}
-              type="text"
-              value={opt}
-              onChange={(e) => handleOptionChange(index, e.target.value)}
-              placeholder={`Option ${index + 1}`}
-              required
-            />
+          <h2>Add New Coding Question</h2>
+          <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="Question Title (e.g., Two Sum)" required />
+          <textarea value={problemStatement} onChange={e => setProblemStatement(e.target.value)} placeholder="Problem Statement (Description)" required />
+          <textarea value={starterCode} onChange={e => setStarterCode(e.target.value)} placeholder="Starter Code (e.g., function twoSum(nums, target) { ... })" required />
+          
+          <h3>Test Cases</h3>
+          {testCases.map((tc, index) => (
+            <div key={index} className="test-case-inputs">
+              <input type="text" value={tc.input} onChange={e => handleTestCaseChange(index, 'input', e.target.value)} placeholder={`Input ${index + 1}`} required />
+              <input type="text" value={tc.expectedOutput} onChange={e => handleTestCaseChange(index, 'expectedOutput', e.target.value)} placeholder={`Expected Output ${index + 1}`} required />
+              {testCases.length > 1 && <button type="button" onClick={() => removeTestCase(index)}>Remove</button>}
+            </div>
           ))}
-          <input
-            type="text"
-            value={correctAnswer}
-            onChange={(e) => setCorrectAnswer(e.target.value)}
-            placeholder="Correct Answer (must match one option exactly)"
-            required
-          />
+          <button type="button" onClick={addTestCase}>Add Test Case</button>
           <button type="submit">Add Question</button>
         </form>
 
-        {/* Create Test Form */}
+        {/* Form for Creating a New Test */}
         <form onSubmit={handleCreateTest} className="admin-form">
           <h2>Create New Test</h2>
           <input
@@ -148,7 +156,7 @@ const AdminPanel = () => {
                     checked={selectedQuestions.includes(q._id)}
                     onChange={() => handleQuestionSelect(q._id)}
                   />
-                  <label htmlFor={q._id}>{q.questionText}</label>
+                  <label htmlFor={q._id}>{q.title}</label>
                 </div>
               ))
             ) : (
