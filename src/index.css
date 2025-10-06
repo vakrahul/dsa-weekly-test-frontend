@@ -1,0 +1,17 @@
+/* A simple CSS reset and default styles for a light theme */
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color: #213547;
+  background-color: #f0f2f5; /* Light grey background */
+}
+
+body {
+  margin: 0;
+}
+
+main {
+  padding: 1rem;
+}

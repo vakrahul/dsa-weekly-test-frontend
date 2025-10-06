@@ -1,0 +1,39 @@
+.tests-list-container {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 2rem auto;
+}
+
+.tests-list-container h1 {
+  text-align: center;
+  margin-bottom: 2rem;
+  color: #ffffff;
+}
+
+.tests-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.test-card {
+  background-color: #2c2c2c;
+  padding: 1.5rem;
+  border-radius: 8px;
+  text-decoration: none;
+  color: #cccccc;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.test-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 12px rgba(98, 0, 234, 0.3);
+}
+
+.test-card h2 {
+  margin-top: 0;
+  color: #ffffff;
+  border-bottom: 1px solid #444;
+  padding-bottom: 0.5rem;
+}
